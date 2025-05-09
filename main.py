@@ -1,10 +1,20 @@
 import tkinter as tk
 from tkinter import messagebox
+import random
 
 # Initialize
 root = tk.Tk()
-root.title("Tic Tac Toe")
 root.geometry("300x500")
+
+# Ask the question
+play_with_computer = messagebox.askyesno("Game Mode", "Do you want to play against the computer?")
+
+if play_with_computer:
+    print("User chose to play against computer.")
+    root.title("Tic Tac Toe - User vs Computer")
+else:
+    print("User chose 2-player mode.")
+    root.title("Tic Tac Toe - 2-Player Mode")
 
 # Create a variable to store and update the game status text
 status_text = tk.StringVar()
@@ -43,6 +53,26 @@ def win_or_lose(status):
         return status[0][2]
     return None
 
+def end_game():
+    for row in buttons:
+        for btn in row:
+            btn.config(state="disabled")
+
+def check_game_end():
+    result = win_or_lose(status)
+    # Check for win condition
+    result = win_or_lose(status)
+    if result is not None:
+        messagebox.showinfo(title='Congratulations', message=f'Player {result} win this game')
+        end_game()
+        return True
+    # Check for tie condition (all cells filled)
+    if all(cell != "" for row in status for cell in row):
+        messagebox.showinfo(title='Game Over', message='It is a tie')
+        end_game()
+        return True
+    return False
+
 
 def on_button_click(r, c):
     """
@@ -60,25 +90,29 @@ def on_button_click(r, c):
         if current_player[0] == "X":
             status[r][c] = "X"
             current_player[0] = "O"
+            if check_game_end():
+                return
+            if position == 1:
+                computer_move()
         else:
             status[r][c] = "O"
             current_player[0] = "X"
+            if check_game_end():
+                return
+            if position == 0:
+                computer_move()
         # Update status display for next player
         status_text.set(f"Player {current_player[0]}'s turn")
         print(status)
 
-        # Check for win condition
-        result = win_or_lose(status)
-        if result is not None:
-            messagebox.showinfo(title='Congratulations', message=f'Player {result} win this game')
-            return
-        # Check for tie condition (all cells filled)
-        if all(cell != "" for row in status for cell in row):
-            messagebox.showinfo(title='Game Over', message='It is a tie')
     else:
         # Display warning if cell is already occupied
         messagebox.showwarning("Not available", "This box have been occupied")
 
+def computer_move():
+    available_buttons = [btn for row in buttons for btn in row if btn["text"] == ""]
+    if available_buttons:
+        random.choice(available_buttons).invoke()
 
 # Create the game board with 3x3 grid of buttons
 for row in range(3):
@@ -94,6 +128,12 @@ for row in range(3):
         button.grid(row=row, column=col)
         # Store button reference in the buttons matrix
         buttons[row][col] = button
+
+if play_with_computer:
+    # Judge the computer is first or second
+    position = random.randint(0, 1)
+    if position == 0:
+        computer_move()
 
 # Start the main event loop
 root.mainloop()
